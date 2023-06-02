@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat bot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+</head>
+
+<body class="bg-warning">
+  <div class="container p-3">
+    <div class="row">
+      <div class="col">
+        <button onclick=back() class="btn btn-primary">Logout</button>
+      </div>
+    </div>
+  </div>
+  
+  
+  <div class="container ">
+    
+      
+    
+    <div class="row p-5">
+      <div class="col">
+        <h1 style="text-align: center;">Chat App </h1>
+        <h6 style="text-align: center;">Made By Mohamed Taher & Abderrahim Ncir & Feten Dridi & Wassim Jmili</h6>
+       
+
+      </div>
+    </div>
+    
+      <div class="row justify-content-end">
+      <div class="col-6">
+        <h6 style="text-align: right;" id="Profile"></h6>
+      </div>
+    </div>
+    <div class="accordion accordion-flush" id="accordionFlushExample">
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.4/web3.min.js"
+    integrity="sha512-oMd9Re3VgJcXuZJn9DN6X7S7JUc7xLYZ2UyZ85Mm/xzaW3lwBr4fV2zjuu/n5jY/Of/2JOx35CTa6zvQNxb31Q=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script type="application/json" src="Abi.json" id="imp"></script>
+  <script>
+      var myaccount=localStorage.getItem("myaddress");
+
+      let abi=  [
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "timestamp",
+        "type": "string"
+      }
+    ],
+    "name": "message",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_message",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "time",
+        "type": "string"
+      }
+    ],
+    "name": "sendMessage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
+        let contractAddress='0xe50a6D4A270A351c58e8BDb7f145Fbb882fE3aA6';
+
+
+      // onstart
+    window.onload=function(){
+     //console.log(myaccount);
+     if(myaccount==null){
+      window.location.replace('index.html');
+     }
+      
+    add();
+    };
+
+    function back()
+    {
+      localStorage.removeItem("myaddress");
+      window.location.replace('index.html');
+    }
+
+
+    function addMessages(a)
+    {
+    
+        var id="messagepart"+a.id;
+         
+        
+     
+        let web3=new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
+
+        //instialier une instance du contract
+        let mycontract=new web3.eth.Contract(abi,contractAddress);
+        mycontract.getPastEvents('message',{
+        fromBlock:0,
+        toBlock:'latest',
+         
+    }
+,function(err,data){
+        let x=data.length;
+        document.getElementById(id).innerHTML='';
+          for(var n=0;n<x;n++){
+            var timestamp=0;
+
+            if( data[n].returnValues.from==a.id){
+            if(data[n].returnValues.to==myaccount){
+              var timestamp=data[n].returnValues.time;
+              var decoration='<div class="row justify-content-end">'+
+            '<div class="col-4 col-md-auto">'+
+                '<div class="alert alert-dark" role="alert">'+
+                  data[n].returnValues.message+
+
+            '<h6 style="font-size: 0.6em;">recieved '+data[n].returnValues.timestamp+'</h6>'+
+                  '</div>'+
+            '</div>'+
+          '</div>'
+            document.getElementById(id).innerHTML+=decoration;
+            }
+          }
+          if( data[n].returnValues.to==a.id){
+            if(data[n].returnValues.from==myaccount){
+              var timestamp=data[n].returnValues.time;
+               
+              var decoration='<div class="row justify-content-start">'+
+            '<div class="col-4 col-md-auto">'+
+                '<div class="alert alert-primary" role="alert">'+
+                  data[n].returnValues.message+
+                  '<h6 style="font-size: 0.6em;">send '+data[n].returnValues.timestamp+'</h6>'+
+                  '</div>'+
+            '</div>'+
+          '</div>'  
+            document.getElementById(id).innerHTML+=decoration;
+            }
+            //console.log('FROM:'+data[n].returnValues.from+'--'+data[n].returnValues.message+'--'+data[n].returnValues.to);
+            
+          }
+          
+        }
+        document.getElementById(id).innerHTML+='<div class="input-group mb-0" id="groupinputbutton'+a.id+'">'+
+              '<input type="text" class="form-control" placeholder="Type message" id="inputbutton'+a.id+'"aria-label="Recipien username" aria-describedby="button-addon2" />'+
+              '<button class="btn btn-warning" type="button" onclick=onSend(this) id="button'+a.id+'" style="padding-top: .55rem;">'+
+                'Send'+
+              '</button>'+
+            '</div>'
+            
+            
+    });
+          ;
+    }
+
+
+    function onSend(det){
+      //console.log("Press zala send by:"+det.id);
+      var message=document.getElementById("input"+det.id).value;
+      var to=det.id.split('on')[1];
+      let web3=new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
+      let mycontract=new web3.eth.Contract(abi,contractAddress);
+      var date=new Date().toLocaleDateString("IN");
+          var time=new Date().toLocaleTimeString("IN");
+          time=time.split('.')
+          var accurateTime= date+' '+time[0]+':'+time[1];
+          
+      mycontract.methods.sendMessage(to,message,accurateTime).send({from:myaccount},function(err,transcationHash){
+        if(err){
+          console.log(error);
+        }
+        else{
+
+          var decoration='<div class="row justify-content-start">'+
+            '<div class="col-4 col-md-auto">'+
+                '<div class="alert alert-primary" role="alert">'+
+                  message+
+                  '<h6 style="font-size: 0.6em;">send '+accurateTime+'</h6>'+
+                  '</div>'+
+            '</div>'+
+          '</div>'
+          var buttonText=document.getElementById("groupinputbutton"+to).innerHTML;
+          document.getElementById("groupinputbutton"+to).remove();
+          //document.getElementById("button"+det.id).remove();
+            document.getElementById("messagepart"+to).innerHTML+=decoration;
+            document.getElementById("messagepart"+to).innerHTML+='<div class="input-group mb-0" id="groupinputbutton'+to+'">'+
+              '<input type="text" class="form-control" placeholder="Type message" id="inputbutton'+to+'"aria-label="Recipien username" aria-describedby="button-addon2" />'+
+              '<button class="btn btn-warning" type="button" onclick=onSend(this) id="button'+to+'" style="padding-top: .55rem;">'+
+                'Send'+
+              '</button>'+
+            '</div>' 
+            document.getElementById("groupinputbutton"+to).scrollIntoView();
+               
+        }
+      });
+//      console.log('From:'+myaccount+' message: '+message+' To: '+to);
+    }
+
+
+
+    function add() {
+      let web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
+      web3.eth.getAccounts(function (error, accounts) {
+        var n = accounts.length;
+        var temp='';
+        for(var i=0;i<n;i++)
+        {
+          if(accounts[i]==myaccount){
+            continue;
+          }
+        temp =temp+ '<div class="accordion-item p-3  border-primary bg-dark">'+
+    '<h2 class="accordion-header" id="flush-heading'+accounts[i]+'">'+
+      '<button id="'+accounts[i]+'"class="accordion-button collapsed" type="button" onclick=addMessages(this) data-bs-toggle="collapse" data-bs-target="#flush-collapse'+accounts[i]+'" aria-expanded="false" aria-controls="flush-collapse'+accounts[i]+'">'+
+        accounts[i]+
+      '</button>'+
+    '</h2>'+
+    '<div id="flush-collapse'+accounts[i]+'" class="accordion-collapse collapse" aria-labelledby="flush-heading'+accounts[i]+'" data-bs-parent="#accordionFlushExample">'+
+      '<div class="accordion-body" id="messagepart'+accounts[i]+'">Placeholder content for this accordion, which is intended to demonstrate the <code>.accordion-flush</code> class. This is the first items accordion body.</div>'+
+    '</div>'+
+  '</div>';
+}
+
+        
+        document.getElementById("accordionFlushExample").innerHTML = temp;
+        document.getElementById("Profile").innerHTML = 'Account:'+myaccount;
+      });
+
+
+
+
+
+
+    }
+
+
+
+/*
+//suppreesion 
+
+
+let web3=new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
+        let mycontract=new web3.eth.Contract(abi,contractAddress);
+
+*************
+const web3 = new Web3('https://ropsten.infura.io/v3/PROJET_ID'); // Remplacer par l'URL réelle de votre fournisseur d'infrastructure Web3 et votre ID de projet
+
+const contractInstance = new web3.eth.Contract(contractABI, contractAddress);
+
+// Récupérer les informations du message en utilisant l'ID du message
+async function getMessageInfo(messageId) {
+  const message = await contractInstance.methods.messages(messageId).call();
+  return {
+    sender: message.sender,
+    message: message.message,
+    time: message.time
+  };
+}
+
+// Supprimer le message correspondant à l'ID donné
+async function deleteMessage(messageId) {
+  await contractInstance.methods.deleteMessage(messageId).send({ from: web3.eth.accounts.givenProvider.selectedAddress });
+}
+
+// Créer un bouton de suppression pour chaque message
+async function createDeleteButton(messageId) {
+  const messageInfo = await getMessageInfo(messageId);
+  const button = document.createElement('button');
+  button.innerText = 'Supprimer';
+  button.addEventListener('click', async () => {
+    try {
+      await deleteMessage(messageId);
+      alert('Le message a été supprimé avec succès');
+      location.reload(); // Actualiser la page pour afficher les messages mis à jour
+    } catch (error) {
+      console.error(error);
+      alert('Erreur lors de la suppression du message');
+    }
+  });
+  return button;
+}
+
+// Afficher les messages
+async function showMessages() {
+  const messagesContainer = document.getElementById('messages-container'); // Remplacer par l'ID réel de votre conteneur de messages
+  messagesContainer.innerHTML = ''; // Effacer le contenu actuel
+  const messagesCount = await contractInstance.methods.messages.length().call();
+  for (let i = 0; i < messagesCount; i++) {
+    const messageInfo = await getMessageInfo(i);
+    const messageElement = document.createElement('div');
+    messageElement.innerHTML = `
+      <p>De: ${messageInfo.sender}</p>
+      <p>Message: ${messageInfo.message}</p>
+      <p>Time: ${messageInfo.time}</p>
+    `;
+    const deleteButton = await createDeleteButton(i);
+    messageElement.appendChild(deleteButton);
+    messagesContainer.appendChild(messageElement);
+  }
+}
+
+// Appeler la fonction showMessages pour afficher les messages lors du chargement de la page
+showMessages();
+
+
+*/
+
+
+// Fonction pour envoyer un message à un groupe de destinataires
+        async function sendGrpMessage() {
+            // Récupérer les valeurs des champs de formulaire
+            const recipientAddress = $("#recipientAddress").val().trim();
+            const messageContent = $("#messageContent").val().trim();
+
+            // Vérifier que les champs sont remplis
+            if (recipientAddress === "" || messageContent === "") {
+                alert("Veuillez remplir tous les champs !");
+                return;
+            }
+
+            // Créer une instance de contrat web3
+           const mycontract = new web3.eth.Contract(abi,contractAddress);
+
+            // Envoyer le message
+            await mycontract.methods.sendGrpMessage([recipientAddress], messageContent).send({ from: web3.eth.defaultAccount });
+
+            // Vider les champs de formulaire
+            $("#recipientAddress").val("");
+            $("#messageContent").val("");
+
+            // Mettre à jour la liste des messages
+            await populateMessageTable();
+        }
+
+        // Fonction pour supprimer un message
+        async function deleteMessage(recipient, index) {
+            // Créer une instance de contrat web3
+            const mycontract = new web3.eth.Contract(abi,contractAddress);
+
+            // Supprimer le message
+            await mycontract.methods.deleteMessage(recipient, index).send({ from: web3.eth.defaultAccount });
+
+            // Mettre à jour la liste des messages
+            await populateMessageTable();
+        }
+
+        // Fonction pour remplir la table des messages
+        async function populateMessageTable() {
+            // Récupérer les messages pour l'adresse par défaut
+            const defaultAddress = web3.eth.defaultAccount;
+            const contract = new web3.eth.Contract(abi,contractAddress);
+            const messages = await contract.methods.getMessagesForAddress(defaultAddress).call();
+
+            // Remplir la table des messages
+            const messageTableBody = $("#messageTableBody");
+            messageTableBody.empty();
+            messages.forEach(message => {
+                const recipients = message.recipients.join(", ");
+                const messageContent = web3.utils.hexToUtf8(message.encryptedMessage);
+                const sender = message.sender;
+                const index = messageTableBody.children().length;
+                const deleteButton = $("<button class='btn btn-danger' onclick='deleteMessage(\"" + defaultAddress + "\", " + index + ")'>Supprimer</button>");
+                messageTableBody.append("<tr><td>" + recipients + "</td><td>" + messageContent + "</td><td>" + sender + "</td><td></td></tr>");
+                messageTableBody.children().last().children().last().append(deleteButton);
+            });
+        }
+
+        // Initialisation de Web3
+        const web3=new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:7545"));
+        //const web3 = new Web3(Web3.givenProvider || "http://localhost:");
+
+        // Récupérer l'adresse par défaut du compte web3
+        web3.eth.getAccounts().then(accounts => {
+            web3.eth.defaultAccount = accounts[0];
+            populateMessageTable();
+        });
+
+
+  </script>
+
+
+      
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Messages au groupe</h1>
+        <hr>
+        <form>
+            <div class="form-group">
+                <label for="recipientAddress">Adresses du destinataire :</label>
+                <input type="text" class="form-control" id="recipientAddress">
+            </div>
+            <div class="form-group">
+                <label for="messageContent">Contenu du message :</label>
+                <textarea class="form-control" id="messageContent" rows="3"></textarea>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="sendGrpMessage()">Envoyer le message</button>
+        </form>
+        <hr>
+        <h2>Mes messages</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Destinataire(s)</th>
+                    <th>Contenu du message</th>
+                    <th>Expéditeur</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="messageTableBody">
+            </tbody>
+        </table>
+    </div>
+
+ 
+  
+</body>
+
+</html>
